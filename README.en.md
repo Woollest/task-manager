@@ -2,6 +2,29 @@
 
 This repository contains a simple command-line task manager using JSON storage.
 
+## Quick Start
+
+### Setup in 1 minute
+
+```bash
+# Clone the repository
+git clone https://github.com/Woollest/task-manager.git
+cd task-manager
+
+# Run setup (first time only)
+bash setup.sh
+
+# Display your tasks
+python3 test.py list
+```
+
+### Demo
+
+```bash
+# See usage examples
+bash demo.sh
+```
+
 ## Features
 
 - Add, complete, delete, and update tasks

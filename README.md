@@ -2,6 +2,29 @@
 
 このリポジトリは、シンプルな JSON ストレージを使ったコマンドラインタスク管理ツールです。
 
+## クイックスタート
+
+### 1分でセットアップ
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/Woollest/task-manager.git
+cd task-manager
+
+# セットアップ実行（初回のみ）
+bash setup.sh
+
+# タスク一覧を表示
+python3 test.py list
+```
+
+### デモンストレーション
+
+```bash
+# 実行例を見る
+bash demo.sh
+```
+
 ## 特徴
 
 - タスクの追加、完了、削除、更新
