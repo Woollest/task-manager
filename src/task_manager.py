@@ -13,6 +13,41 @@ PRIORITY_CHOICES = ["low", "normal", "high"]
 TAG_SPLIT_PATTERN = re.compile(r"\s*,\s*")
 
 
+class Color:
+    """ANSI color codes for terminal output."""
+    # Text colors
+    BLACK = '\033[30m'
+    RED = '\033[31m'
+    GREEN = '\033[32m'
+    YELLOW = '\033[33m'
+    BLUE = '\033[34m'
+    MAGENTA = '\033[35m'
+    CYAN = '\033[36m'
+    WHITE = '\033[37m'
+    GRAY = '\033[90m'
+    
+    # Text styles
+    BOLD = '\033[1m'
+    DIM = '\033[2m'
+    ITALIC = '\033[3m'
+    UNDERLINE = '\033[4m'
+    
+    # Reset
+    RESET = '\033[0m'
+    
+    @staticmethod
+    def disable():
+        """Disable colors for non-TTY output."""
+        for attr in dir(Color):
+            if not attr.startswith('_') and attr != 'disable':
+                setattr(Color, attr, '')
+
+
+# Disable colors if not a TTY
+if not sys.stdout.isatty():
+    Color.disable()
+
+
 @dataclass
 class Task:
     id: int
@@ -35,6 +70,13 @@ class Task:
     @property
     def due_date_obj(self) -> date:
         return datetime.strptime(self.due_date, DATE_FORMAT).date()
+
+    @property
+    def is_overdue(self) -> bool:
+        """Check if task is overdue (incomplete and past due date)."""
+        if self.completed:
+            return False
+        return self.due_date_obj < date.today()
 
     def matches_query(self, query: str) -> bool:
         normalized = query.lower()
@@ -218,14 +260,54 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def get_priority_color(priority: str) -> str:
+    """Get color based on priority level."""
+    if priority == "high":
+        return Color.RED
+    elif priority == "normal":
+        return Color.YELLOW
+    else:  # low
+        return Color.GREEN
+
+
 def format_task(task: Task) -> str:
-    status = "完了" if task.completed else "未完了"
-    tags = ", ".join(task.tags) if task.tags else "なし"
+    """Format task with colors and visual markers."""
+    
+    # Status marker
+    if task.completed:
+        status_marker = f"{Color.GREEN}✓{Color.RESET}"
+        status_text = f"{Color.GRAY}完了{Color.RESET}"
+        title_color = Color.GRAY
+        title_style = Color.DIM
+    else:
+        status_marker = f"{Color.RED}☐{Color.RESET}"
+        status_text = f"{Color.RED}未完了{Color.RESET}"
+        title_color = ""
+        title_style = Color.BOLD
+    
+    # Title with color
+    title = f"{title_color}{title_style}{task.title}{Color.RESET}"
+    
+    # Priority color
+    priority_color = get_priority_color(task.priority)
+    priority_text = f"{priority_color}{task.priority}{Color.RESET}"
+    
+    # Tags with color
+    if task.tags:
+        tags_colored = ", ".join([f"{Color.CYAN}#{tag}{Color.RESET}" for tag in task.tags])
+    else:
+        tags_colored = f"{Color.GRAY}なし{Color.RESET}"
+    
+    # Overdue warning
+    overdue_warning = ""
+    if task.is_overdue:
+        overdue_warning = f"\n  {Color.RED}{Color.BOLD}⚠️ 期限超過！{Color.RESET}"
+    
     return (
-        f"[{task.id}] {task.title} ({status})\n"
+        f"[{status_marker} {task.id}] {title} ({status_text}){overdue_warning}\n"
         f"  期限: {task.due_date}\n"
-        f"  優先度: {task.priority}\n"
-        f"  タグ: {tags}\n"
+        f"  優先度: {priority_text}\n"
+        f"  タグ: {tags_colored}\n"
         f"  説明: {task.description}\n"
         f"  作成日時: {task.created_at}"
     )
@@ -233,9 +315,9 @@ def format_task(task: Task) -> str:
 
 def print_task_list(tasks: Iterable[Task], header: str) -> None:
     if not tasks:
-        print("表示するタスクがありません。")
+        print(f"{Color.YELLOW}表示するタスクがありません。{Color.RESET}")
         return
-    print(header)
+    print(f"{Color.BOLD}{Color.CYAN}{header}{Color.RESET}")
     for task in tasks:
         print(format_task(task))
         print("---")
@@ -249,16 +331,16 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         if args.command == "add":
             task = manager.add_task(args.title, args.description, args.due_date, args.priority, args.tags)
-            print("タスクを追加しました:")
+            print(f"{Color.GREEN}{Color.BOLD}✓ タスクを追加しました:{Color.RESET}")
             print(format_task(task))
 
         elif args.command == "complete":
             task = manager.complete_task(args.task_id)
-            print(f"タスクを完了にしました: {task.id} - {task.title}")
+            print(f"{Color.GREEN}{Color.BOLD}✓ タスクを完了にしました:{Color.RESET} [{task.id}] {task.title}")
 
         elif args.command == "delete":
             task = manager.delete_task(args.task_id)
-            print(f"タスクを削除しました: {task.id} - {task.title}")
+            print(f"{Color.RED}{Color.BOLD}✓ タスクを削除しました:{Color.RESET} [{task.id}] {task.title}")
 
         elif args.command == "update":
             task = manager.update_task(
@@ -269,7 +351,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 priority=args.priority,
                 tags=args.tags,
             )
-            print("タスクを更新しました:")
+            print(f"{Color.BLUE}{Color.BOLD}✓ タスクを更新しました:{Color.RESET}")
             print(format_task(task))
 
         elif args.command == "list":
@@ -289,10 +371,13 @@ def main(argv: Optional[List[str]] = None) -> int:
 
         elif args.command == "stats":
             stats = manager.stats()
-            print("タスク統計:")
-            print(f"  合計: {stats['total']}")
-            print(f"  完了: {stats['completed']}")
-            print(f"  未完了: {stats['pending']}")
+            print(f"{Color.BOLD}{Color.CYAN}📊 タスク統計:{Color.RESET}")
+            print(f"  {Color.BOLD}合計:{Color.RESET} {stats['total']}")
+            print(f"  {Color.GREEN}✓ 完了:{Color.RESET} {stats['completed']}")
+            print(f"  {Color.RED}☐ 未完了:{Color.RESET} {stats['pending']}")
+            if stats['total'] > 0:
+                completion_rate = (stats['completed'] / stats['total']) * 100
+                print(f"  {Color.BOLD}進捗:{Color.RESET} {completion_rate:.1f}%")
 
         return 0
 
