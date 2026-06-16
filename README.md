@@ -59,6 +59,12 @@ python3 test.py list
 python3 test.py list --pending --tag cli --sort priority
 ```
 
+### 使用例スクリーンショット
+
+以下はコマンド実行例のスクリーンショットです。
+
+![タスク管理ツールの使用例](usage_screenshot.png)
+
 ### タスク検索
 
 ```bash

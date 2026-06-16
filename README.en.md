@@ -59,6 +59,12 @@ Filter example:
 python3 test.py list --pending --tag cli --sort priority
 ```
 
+### Usage screenshot
+
+Below is a sample screenshot of the command usage.
+
+![Task manager usage example](usage_screenshot.png)
+
 ### Search tasks
 
 ```bash
