@@ -1,0 +1,26 @@
+# 学習ログ
+
+## 学習時間
+-2時間くらい
+
+## 学習内容
+-gitのコマンド操作
+
+git status
+git add sample.txt
+git add .
+git commit -m "変更内容を書き込む"
+git push origin main
+
+- [x] **VS CodeでのCodex（AIコーディングエージェント）のセットアップ**
+  - 公式拡張機能のインストールとChatGPTアカウントの連携方法。
+  - Chat、Agent、Full Accessなどの実行モードの違い。
+- [x] **Gitの基本操作と概念の理解**
+  - `git add .`（準備部屋にステージング）から `git commit -m "メッセージ"`（ローカルに記録）の流れ。
+  - `git status` を使ったリモート（GitHub）との同期状態の確認方法（`ahead` などのステータス読み解き）。
+- [x] **Gitのブランチ操作**
+  - 「ブランチを切る（`git switch -c ブランチ名`）」とは、本番の歴史（`main`）に影響を与えずに安全に開発するための分かれ道を作ること。
+  - 元の `main` ブランチに安全に戻る方法（`git switch main`）。
+- [x] **README.mdの書き方**
+  - プロジェクトの取扱説明書として必要な基本構成（概要、使用技術、セットアップ、使い方）。
+  - マークダウン（Markdown）を使った見出しやコードブロックの装飾。
